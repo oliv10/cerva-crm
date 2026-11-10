@@ -77,27 +77,21 @@ Locally, put the same values in `.dev.vars` (gitignored).
 
 ## First deploy checklist (GitHub → Workers on `main`)
 
-1. Create the D1 database once:
+1. D1 database `cerva-crm` is already created; `database_id` is set in `wrangler.toml`.
 
-   ```bash
-   npx wrangler d1 create cerva-crm
-   ```
-
-2. Paste the returned `database_id` into `wrangler.toml` (replace the placeholder UUID).
-
-3. Apply migrations remotely:
+2. Apply migrations remotely (once, or after new migration files):
 
    ```bash
    npm run db:migrate:remote
    ```
 
-4. Set secrets (`CRM_PASSWORD`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) and optionally `APP_URL` as a Worker variable.
+3. Set secrets (`CRM_PASSWORD`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) and optionally `APP_URL` as a Worker variable.
 
-5. Connect the GitHub repo to Cloudflare Workers Builds (or keep using `npm run deploy`). Ensure production deploys from **`main`**.
+4. Connect the GitHub repo to Cloudflare Workers Builds (or keep using `npm run deploy`). Ensure production deploys from **`main`**.
 
-6. Confirm cron trigger `*/30 * * * *` is present in `wrangler.toml` after deploy.
+5. Confirm cron trigger `*/30 * * * *` is present in `wrangler.toml` after deploy.
 
-7. Sign in, connect Gmail, create an account/contact with a known email, hit **Sync now**, confirm Last contact fills in.
+6. Sign in, connect Gmail, create an account/contact with a known email, hit **Sync now**, confirm Last contact fills in.
 
 ## API sketch
 
