@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cerva CRM — Sign in</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="login-wrap">
+      <form class="panel login-card" id="login-form">
+        <div class="brand">
+          <strong>Cerva Services</strong>
+          <span>CRM for Indy-area cleaning</span>
+        </div>
+        <h1>Sign in</h1>
+        <p class="muted">Shared access for Korē. Enter the CRM password.</p>
+        <div class="stack" style="margin-top: 1rem">
+          <label>
+            Password
+            <input type="password" name="password" autocomplete="current-password" required />
+          </label>
+          <button class="btn" type="submit">Enter CRM</button>
+          <p id="error" class="muted error hidden" style="padding: 0.5rem 0.65rem; border-radius: 8px"></p>
+        </div>
+      </form>
+    </div>
+    <script>
+      const form = document.getElementById("login-form");
+      const error = document.getElementById("error");
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        error.classList.add("hidden");
+        const password = new FormData(form).get("password");
+        const res = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password }),
+        });
+        if (!res.ok) {
+          error.textContent = "Wrong password.";
+          error.classList.remove("hidden");
+          return;
+        }
+        location.href = "/";
+      });
+    </script>
+  </body>
+</html>

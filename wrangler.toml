@@ -1,0 +1,26 @@
+name = "cerva-crm"
+main = "src/index.ts"
+compatibility_date = "2026-11-10"
+workers_dev = true
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "cerva-crm"
+# Replace with the UUID from `wrangler d1 create cerva-crm` before first remote deploy
+database_id = "00000000-0000-0000-0000-000000000001"
+migrations_dir = "migrations"
+
+[triggers]
+# Sync Gmail last-contact every 30 minutes
+crons = ["*/30 * * * *"]
+
+[observability]
+enabled = true
+
+[observability.traces]
+enabled = true
