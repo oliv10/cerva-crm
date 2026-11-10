@@ -24,6 +24,9 @@ function publicPath(path: string): boolean {
     path === "/login" ||
     path === "/login/" ||
     path === "/styles.css" ||
+    path === "/cerva-logo.png" ||
+    path === "/cerva-icon.png" ||
+    path === "/cerva-hero.jpg" ||
     path === "/api/login" ||
     path === "/api/oauth/gmail/callback" ||
     path.startsWith("/favicon")
