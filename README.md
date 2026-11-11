@@ -1,17 +1,20 @@
 # Cerva CRM
 
-Single-user CRM for **Cerva Services** (Indy-area commercial & residential cleaning). Built on Cloudflare Workers + D1 + Workers Assets.
+Single-user sales CRM for **Cerva Services** (Indy-area commercial & residential cleaning). Cloudflare Workers + D1 + Workers Assets.
 
 Korē (`kore@cerva.team`) uses a shared password gate. Gmail readonly sync fills **Last contact** from the shared mailbox.
 
-## Features
+## Phase 1 surfaces
 
-- Accounts + contacts (residential / commercial)
-- Pipeline board (lead → quoted → won / lost) with drag-and-drop or stage buttons
-- Last email contact per account/contact via Gmail sync (cron ~every 30 min + Sync now)
-- Shared `CRM_PASSWORD` cookie auth
+- **Dashboard** — open opps, commercial/residential, MRR, follow-ups, activity tallies (date filters)
+- **Leads & Opportunities** — Kanban + detail (12 stages); site address on the opportunity; Lost requires reason
+- **Contacts** — people + Gmail last-contact
+- **Activities** — log + chronological list
+- **Follow-ups** — Overdue / Today / Tomorrow / This Week / Upcoming / None + shortcut chips
+- **Customers** — auto-created when stage → Won
+- **Settings** — password (D1 `crm_password`) + Gmail connect
 
-Out of scope: multi-user, quote PDFs, job calendar, public quote form, sending email.
+Out of scope: multi-user, Reports, quote PDFs, calendar, sending email.
 
 ## Stack
 
@@ -24,91 +27,38 @@ Out of scope: multi-user, quote PDFs, job calendar, public quote form, sending e
 
 ```bash
 npm install
-
-# Optional: copy and edit local secrets
 cp .dev.vars.example .dev.vars
-
-# Apply D1 migrations to local DB
 npm run db:migrate:local
-
-# Start worker (includes /cdn-cgi/local/scheduled for cron testing)
 npm run dev
 ```
 
-Open http://localhost:8787 — sign in with the `CRM_PASSWORD` from `.dev.vars`.
+Open http://localhost:8787 — sign in with `CRM_PASSWORD` from `.dev.vars` (or D1 `crm_password`).
 
-Test cron sync:
-
-```bash
-curl "http://localhost:8787/cdn-cgi/local/scheduled?cron=*/30+*+*+*+*"
-```
-
-## Required secrets
-
-Set these with Wrangler (or Workers dashboard → Settings → Variables and Secrets):
+## Secrets
 
 | Secret | Purpose |
 | --- | --- |
-| `CRM_PASSWORD` | Shared login password for Korē |
+| `CRM_PASSWORD` | Shared login (optional if D1 `crm_password` is set) |
 | `GOOGLE_CLIENT_ID` | Google OAuth web client ID |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
 
-Optional var (plain env, not secret):
+Optional: `APP_URL` for OAuth redirect origin.
 
-| Var | Purpose |
-| --- | --- |
-| `APP_URL` | Canonical public origin for OAuth redirect, e.g. `https://cerva-crm.<subdomain>.workers.dev` |
+## Deploy
 
-```bash
-npx wrangler secret put CRM_PASSWORD
-npx wrangler secret put GOOGLE_CLIENT_ID
-npx wrangler secret put GOOGLE_CLIENT_SECRET
-```
-
-Locally, put the same values in `.dev.vars` (gitignored).
-
-### Google OAuth setup
-
-1. Create an OAuth **Web application** client in Google Cloud Console.
-2. Enable the **Gmail API**.
-3. Authorized redirect URI: `https://<your-worker-host>/api/oauth/gmail/callback` (and `http://localhost:8787/api/oauth/gmail/callback` for local).
-4. Scope used: `https://www.googleapis.com/auth/gmail.readonly`.
-5. In the CRM, open **Gmail → Connect Gmail** while signed into the shared Cerva mailbox. Refresh token is stored in D1 (`app_settings`).
-
-## First deploy checklist (GitHub → Workers on `main`)
-
-1. D1 database `cerva-crm` is already created; `database_id` is set in `wrangler.toml`.
-
-2. Apply migrations remotely (once, or after new migration files):
-
-   ```bash
-   npm run db:migrate:remote
-   ```
-
-3. Set secrets (`CRM_PASSWORD`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) and optionally `APP_URL` as a Worker variable.
-
-4. Connect the GitHub repo to Cloudflare Workers Builds (or keep using `npm run deploy`). Ensure production deploys from **`main`**.
-
-5. Confirm cron trigger `*/30 * * * *` is present in `wrangler.toml` after deploy.
-
-6. Sign in, connect Gmail, create an account/contact with a known email, hit **Sync now**, confirm Last contact fills in.
+1. Apply migrations: `npm run db:migrate:remote` (or D1 SQL MCP when Wrangler has no token)
+2. Deploy from **`main`** via Workers Builds / `npm run deploy`
+3. Sign in, confirm Dashboard + pipeline stages, Won → Customers
 
 ## API sketch
 
-| Method | Path | Notes |
-| --- | --- | --- |
-| POST | `/api/login` | `{ password }` → session cookie |
-| GET/POST/PUT/DELETE | `/api/accounts`… | CRUD + nested contacts |
-| GET/POST/PUT/PATCH/DELETE | `/api/deals`… | Pipeline; `PATCH …/stage` |
-| GET | `/api/oauth/gmail/start` | Begin OAuth |
-| GET | `/api/oauth/gmail/callback` | OAuth redirect |
-| POST | `/api/gmail/sync` | On-demand sync |
-
-## Project layout
-
-```
-migrations/     D1 SQL
-public/         UI (HTML/CSS/JS)
-src/            Worker (Hono API, auth, Gmail, cron)
-wrangler.toml   Worker name, D1, assets, cron
-```
+| Path | Notes |
+| --- | --- |
+| `/api/dashboard` | Metrics; `?from=&to=` |
+| `/api/opportunities` | CRUD + filters; `PATCH …/stage` |
+| `/api/contacts` | Global list + account nested create |
+| `/api/activities` | Log + list |
+| `/api/follow-ups` | Open opps for bucketing |
+| `/api/customers` | Won conversions |
+| `/api/settings/password` | Update D1 password when secret unset |
+| `/api/gmail/*` | OAuth + sync |

@@ -12,83 +12,142 @@
       <header class="topbar">
         <div class="brand">
           <img class="brand-logo" src="/cerva-logo.png" alt="Cerva Services" />
-          <span>Accounts · Pipeline · Last contact</span>
+          <span>Sales CRM · Korē</span>
         </div>
         <nav class="nav" id="nav">
-          <button type="button" data-view="accounts" class="active">Accounts</button>
-          <button type="button" data-view="pipeline">Pipeline</button>
-          <button type="button" data-view="gmail">Gmail</button>
+          <button type="button" data-view="dashboard" class="active">Dashboard</button>
+          <button type="button" data-view="opportunities">Leads &amp; Opportunities</button>
+          <button type="button" data-view="contacts">Contacts</button>
+          <button type="button" data-view="activities">Activities</button>
+          <button type="button" data-view="followups">Follow-ups</button>
+          <button type="button" data-view="customers">Customers</button>
+          <button type="button" data-view="settings">Settings</button>
           <button type="button" id="logout-btn" class="secondary">Log out</button>
         </nav>
       </header>
 
       <div id="flash" class="flash hidden"></div>
 
-      <!-- Accounts list -->
-      <section id="view-accounts" class="stack">
+      <!-- Dashboard -->
+      <section id="view-dashboard" class="stack">
         <div class="panel">
           <div class="row">
             <div>
-              <h1>Accounts</h1>
-              <p class="muted">Residential &amp; commercial clients across Indy and nearby cities.</p>
+              <h1>Dashboard</h1>
+              <p class="muted">Open pipeline, follow-ups, and recent activity.</p>
             </div>
-            <button class="btn" type="button" id="new-account-btn">New account</button>
+            <div class="form-actions">
+              <label class="inline-label">From <input type="date" id="dash-from" /></label>
+              <label class="inline-label">To <input type="date" id="dash-to" /></label>
+              <button class="btn secondary" type="button" id="dash-refresh">Apply</button>
+            </div>
+          </div>
+        </div>
+        <div class="metrics" id="dash-metrics"></div>
+      </section>
+
+      <!-- Opportunities list / kanban -->
+      <section id="view-opportunities" class="stack hidden">
+        <div class="panel">
+          <div class="row">
+            <div>
+              <h1>Leads &amp; Opportunities</h1>
+              <p class="muted">Kanban pipeline with site address on each opportunity.</p>
+            </div>
+            <button class="btn" type="button" id="new-opp-btn">New opportunity</button>
+          </div>
+          <div class="filters row" style="margin-top: 0.75rem">
+            <input id="opp-search" placeholder="Search name, city, source…" />
+            <select id="opp-filter-type">
+              <option value="">All types</option>
+              <option value="residential">Residential</option>
+              <option value="commercial">Commercial</option>
+            </select>
+            <select id="opp-filter-stage">
+              <option value="">All stages</option>
+            </select>
+            <input id="opp-filter-source" placeholder="Lead source" />
           </div>
         </div>
 
-        <div class="panel hidden" id="account-form-panel">
-          <h2 id="account-form-title">New account</h2>
-          <form id="account-form" class="stack">
+        <div class="panel hidden" id="opp-form-panel">
+          <h2 id="opp-form-title">New opportunity</h2>
+          <form id="opp-form" class="stack">
             <input type="hidden" name="id" />
+            <input type="hidden" name="account_id" />
             <div class="grid-2">
-              <label>Name <input name="name" required /></label>
+              <label>Name <input name="account_name" required /></label>
               <label
                 >Type
-                <select name="type">
+                <select name="account_type">
                   <option value="residential">Residential</option>
                   <option value="commercial">Commercial</option>
                 </select>
               </label>
+              <label
+                >Stage
+                <select name="stage" id="opp-stage-select"></select>
+              </label>
+              <label>Lead source <input name="lead_source" /></label>
+              <label>Cleaning type <input name="cleaning_type" /></label>
+              <label>Frequency <input name="frequency" placeholder="Weekly, biweekly…" /></label>
+              <label>Est. MRR ($) <input name="estimated_mrr_dollars" type="number" min="0" step="0.01" /></label>
+              <label>Quoted MRR ($) <input name="quoted_mrr_dollars" type="number" min="0" step="0.01" /></label>
+              <label>Expected start <input name="expected_start" type="date" /></label>
+              <label>Next follow-up <input name="next_follow_up_at" type="date" /></label>
+              <label>Address <input name="address" placeholder="Site address" /></label>
+              <label>City <input name="city" /></label>
+              <label>Property type <input name="property_type" /></label>
+              <label>Sq ft <input name="sq_ft" type="number" min="0" /></label>
             </div>
+            <label>Next action <input name="next_action" /></label>
+            <label id="lost-reason-wrap" class="hidden">Lost reason <input name="lost_reason" /></label>
             <label>Notes <textarea name="notes"></textarea></label>
+            <div class="grid-2" id="opp-contact-fields">
+              <label>Contact name <input name="contact_name" /></label>
+              <label>Contact email <input name="contact_email" type="email" /></label>
+              <label>Contact phone <input name="contact_phone" /></label>
+            </div>
             <div class="form-actions">
               <button class="btn" type="submit">Save</button>
-              <button class="btn secondary" type="button" id="cancel-account-btn">Cancel</button>
+              <button class="btn secondary" type="button" id="cancel-opp-btn">Cancel</button>
             </div>
           </form>
         </div>
 
-        <div class="panel">
-          <div id="accounts-empty" class="empty hidden">No accounts yet. Create the first one.</div>
-          <table id="accounts-table" class="hidden">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Last contact</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
+        <div class="pipeline" id="pipeline-board"></div>
       </section>
 
-      <!-- Account detail -->
+      <!-- Opportunity detail -->
       <section id="view-detail" class="stack hidden">
         <div class="panel">
           <div class="row">
             <div>
-              <button class="btn secondary" type="button" id="back-accounts">← Accounts</button>
-              <h1 id="detail-name" style="margin-top: 0.75rem">Account</h1>
+              <button class="btn secondary" type="button" id="back-opps">← Opportunities</button>
+              <h1 id="detail-name" style="margin-top: 0.75rem">Opportunity</h1>
               <p class="muted" id="detail-meta"></p>
             </div>
             <div class="form-actions">
-              <button class="btn secondary" type="button" id="edit-account-btn">Edit</button>
-              <button class="btn danger" type="button" id="delete-account-btn">Delete</button>
+              <button class="btn secondary" type="button" id="edit-opp-btn">Edit</button>
+              <button class="btn danger" type="button" id="delete-opp-btn">Delete</button>
             </div>
           </div>
           <p id="detail-notes" class="muted"></p>
-          <p class="pill">Last contact: <strong id="detail-last-contact">—</strong></p>
+          <div class="pill-row" id="detail-pills"></div>
+        </div>
+
+        <div class="panel">
+          <div class="row">
+            <h2>Follow-up</h2>
+            <div class="chip-row" id="followup-chips"></div>
+          </div>
+          <form id="followup-form" class="grid-2" style="margin-top: 0.5rem">
+            <label>Next action <input name="next_action" /></label>
+            <label>Next follow-up <input name="next_follow_up_at" type="date" /></label>
+            <div class="form-actions" style="grid-column: 1 / -1">
+              <button class="btn secondary" type="submit">Save follow-up</button>
+            </div>
+          </form>
         </div>
 
         <div class="panel">
@@ -103,9 +162,7 @@
               <label>Email <input name="email" type="email" /></label>
               <label>Phone <input name="phone" /></label>
               <label style="align-content: end"
-                ><span
-                  ><input type="checkbox" name="is_primary" /> Primary contact</span
-                ></label
+                ><span><input type="checkbox" name="is_primary" /> Primary</span></label
               >
             </div>
             <div class="form-actions">
@@ -129,44 +186,51 @@
 
         <div class="panel">
           <div class="row">
-            <h2>Deals</h2>
-            <button class="btn secondary" type="button" id="add-deal-btn">Add deal</button>
+            <h2>Activity timeline</h2>
+            <button class="btn secondary" type="button" id="add-activity-btn">Log activity</button>
           </div>
-          <form id="deal-form" class="stack hidden" style="margin: 0.75rem 0">
+          <form id="activity-form" class="stack hidden" style="margin: 0.75rem 0">
             <div class="grid-2">
-              <label
-                >Stage
-                <select name="stage">
-                  <option value="lead">Lead</option>
-                  <option value="quoted">Quoted</option>
-                  <option value="won">Won</option>
-                  <option value="lost">Lost</option>
-                </select>
-              </label>
-              <label>Cleaning type <input name="cleaning_type" placeholder="Deep, recurring…" /></label>
-              <label>Frequency <input name="frequency" placeholder="Weekly, biweekly…" /></label>
-              <label>Value ($) <input name="value_dollars" type="number" min="0" step="0.01" /></label>
-              <label>Preferred date <input name="preferred_at" type="date" /></label>
-              <label>Address <input name="address" placeholder="Site address" /></label>
-              <label>City <input name="city" /></label>
-              <label>Property type <input name="property_type" placeholder="Office, house, clinic…" /></label>
-              <label>Sq ft <input name="sq_ft" type="number" min="0" /></label>
+              <label>When <input name="happened_at" type="datetime-local" /></label>
+              <label>Type <input name="type" placeholder="Call, email, walkthrough…" /></label>
+              <label>Person <input name="person" /></label>
+              <label>Outcome <input name="outcome" /></label>
             </div>
-            <label>Notes <textarea name="notes"></textarea></label>
+            <label>Summary <textarea name="summary" required></textarea></label>
+            <div class="grid-2">
+              <label>Next action <input name="next_action" /></label>
+              <label>Next follow-up <input name="next_follow_up_at" type="date" /></label>
+            </div>
             <div class="form-actions">
-              <button class="btn" type="submit">Save deal</button>
-              <button class="btn secondary" type="button" id="cancel-deal-btn">Cancel</button>
+              <button class="btn" type="submit">Save activity</button>
+              <button class="btn secondary" type="button" id="cancel-activity-btn">Cancel</button>
             </div>
           </form>
-          <table id="deals-table">
+          <div id="activity-timeline" class="timeline"></div>
+        </div>
+      </section>
+
+      <!-- Contacts -->
+      <section id="view-contacts" class="stack hidden">
+        <div class="panel">
+          <div class="row">
+            <div>
+              <h1>Contacts</h1>
+              <p class="muted">People linked to leads and customers. Gmail last-contact stays here.</p>
+            </div>
+            <input id="contact-search" placeholder="Search contacts…" style="max-width: 240px" />
+          </div>
+        </div>
+        <div class="panel">
+          <div id="contacts-empty" class="empty hidden">No contacts yet.</div>
+          <table id="contacts-list-table" class="hidden">
             <thead>
               <tr>
-                <th>Stage</th>
-                <th>Site</th>
-                <th>Type</th>
-                <th>Frequency</th>
-                <th>Value</th>
-                <th></th>
+                <th>Name</th>
+                <th>Org</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Last contact</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -174,22 +238,82 @@
         </div>
       </section>
 
-      <!-- Pipeline -->
-      <section id="view-pipeline" class="stack hidden">
+      <!-- Activities -->
+      <section id="view-activities" class="stack hidden">
         <div class="panel">
-          <h1>Pipeline</h1>
-          <p class="muted">Drag a deal between stages, or use the stage buttons.</p>
+          <div class="row">
+            <div>
+              <h1>Activities</h1>
+              <p class="muted">Chronological log across opportunities.</p>
+            </div>
+            <select id="activity-opp-filter" style="max-width: 280px">
+              <option value="">All opportunities</option>
+            </select>
+          </div>
         </div>
-        <div class="pipeline" id="pipeline-board"></div>
+        <div class="panel">
+          <div id="activities-list" class="timeline"></div>
+        </div>
       </section>
 
-      <!-- Gmail -->
-      <section id="view-gmail" class="stack hidden">
+      <!-- Follow-ups -->
+      <section id="view-followups" class="stack hidden">
+        <div class="panel">
+          <h1>Follow-ups</h1>
+          <p class="muted">Buckets by next follow-up date. Shortcut chips set the next date.</p>
+        </div>
+        <div id="followup-buckets" class="stack"></div>
+      </section>
+
+      <!-- Customers -->
+      <section id="view-customers" class="stack hidden">
+        <div class="panel">
+          <div class="row">
+            <div>
+              <h1>Customers</h1>
+              <p class="muted">Created when an opportunity moves to Won.</p>
+            </div>
+            <input id="customer-search" placeholder="Search customers…" style="max-width: 240px" />
+          </div>
+        </div>
+        <div class="panel">
+          <div id="customers-empty" class="empty hidden">No customers yet. Mark an opportunity Won.</div>
+          <table id="customers-table" class="hidden">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Service address</th>
+                <th>Frequency</th>
+                <th>MRR</th>
+                <th>Start</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Settings -->
+      <section id="view-settings" class="stack hidden">
         <div class="panel stack">
-          <h1>Gmail sync</h1>
+          <h1>Settings</h1>
+          <p class="muted">Shared password and Gmail last-contact sync for Korē.</p>
+        </div>
+        <div class="panel stack">
+          <h2>Password</h2>
+          <form id="password-form" class="stack">
+            <label>Current password <input name="current_password" type="password" autocomplete="current-password" /></label>
+            <label>New password <input name="password" type="password" required minlength="4" autocomplete="new-password" /></label>
+            <div class="form-actions">
+              <button class="btn" type="submit">Update password</button>
+            </div>
+          </form>
+        </div>
+        <div class="panel stack">
+          <h2>Gmail</h2>
           <p class="muted">
-            Connect the shared Cerva mailbox (readonly). Cron syncs last contact for every CRM email about
-            every 30 minutes. Korē can also sync on demand.
+            Connect the shared Cerva mailbox (readonly). Cron syncs last contact about every 30 minutes.
           </p>
           <p class="pill">Status: <strong id="gmail-status">…</strong></p>
           <p class="pill">Last sync: <strong id="gmail-last-sync">—</strong></p>
@@ -201,6 +325,19 @@
         </div>
       </section>
     </div>
+
+    <div id="lost-modal" class="modal hidden">
+      <div class="modal-card panel stack">
+        <h2>Lost reason</h2>
+        <p class="muted">Required when moving an opportunity to Lost.</p>
+        <label>Reason <input id="lost-modal-reason" required /></label>
+        <div class="form-actions">
+          <button class="btn" type="button" id="lost-modal-save">Confirm Lost</button>
+          <button class="btn secondary" type="button" id="lost-modal-cancel">Cancel</button>
+        </div>
+      </div>
+    </div>
+
     <script src="/app.js"></script>
   </body>
 </html>
