@@ -25,8 +25,16 @@ async function timingSafeEqual(a: string, b: string): Promise<boolean> {
   return diff === 0;
 }
 
+async function resolvePassword(c: Context<{ Bindings: Env }>): Promise<string | null> {
+  if (c.env.CRM_PASSWORD) return c.env.CRM_PASSWORD;
+  const row = await c.env.DB.prepare("SELECT value FROM app_settings WHERE key = ?")
+    .bind("crm_password")
+    .first<{ value: string }>();
+  return row?.value ?? null;
+}
+
 export async function isAuthed(c: Context<{ Bindings: Env }>): Promise<boolean> {
-  const password = c.env.CRM_PASSWORD;
+  const password = await resolvePassword(c);
   if (!password) return false;
   const cookie = getCookie(c, COOKIE);
   if (!cookie) return false;
@@ -35,8 +43,9 @@ export async function isAuthed(c: Context<{ Bindings: Env }>): Promise<boolean> 
 }
 
 export async function login(c: Context<{ Bindings: Env }>, password: string): Promise<boolean> {
-  if (!c.env.CRM_PASSWORD) return false;
-  const ok = await timingSafeEqual(password, c.env.CRM_PASSWORD);
+  const expected = await resolvePassword(c);
+  if (!expected) return false;
+  const ok = await timingSafeEqual(password, expected);
   if (!ok) return false;
   const token = await sessionToken(password);
   const secure = new URL(c.req.url).protocol === "https:";
