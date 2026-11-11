@@ -245,7 +245,8 @@ app.put("/api/accounts/:id", async (c) => {
 
 app.delete("/api/accounts/:id", async (c) => {
   const id = Number(c.req.param("id"));
-  await c.env.DB.prepare(`DELETE FROM accounts WHERE id = ?`).bind(id).run();
+  const result = await c.env.DB.prepare(`DELETE FROM accounts WHERE id = ?`).bind(id).run();
+  if (!result.meta.changes) return c.json({ error: "not found" }, 404);
   return c.json({ ok: true });
 });
 
@@ -338,7 +339,8 @@ app.put("/api/contacts/:id", async (c) => {
 
 app.delete("/api/contacts/:id", async (c) => {
   const id = Number(c.req.param("id"));
-  await c.env.DB.prepare(`DELETE FROM contacts WHERE id = ?`).bind(id).run();
+  const result = await c.env.DB.prepare(`DELETE FROM contacts WHERE id = ?`).bind(id).run();
+  if (!result.meta.changes) return c.json({ error: "not found" }, 404);
   return c.json({ ok: true });
 });
 
@@ -737,7 +739,8 @@ app.post("/api/activities", async (c) => {
 
 app.delete("/api/activities/:id", async (c) => {
   const id = Number(c.req.param("id"));
-  await c.env.DB.prepare(`DELETE FROM activities WHERE id = ?`).bind(id).run();
+  const result = await c.env.DB.prepare(`DELETE FROM activities WHERE id = ?`).bind(id).run();
+  if (!result.meta.changes) return c.json({ error: "not found" }, 404);
   return c.json({ ok: true });
 });
 
@@ -773,6 +776,13 @@ app.get("/api/customers", async (c) => {
   if (binds.length) stmt = stmt.bind(...binds);
   const rows = await stmt.all();
   return c.json({ customers: rows.results ?? [] });
+});
+
+app.delete("/api/customers/:id", async (c) => {
+  const id = Number(c.req.param("id"));
+  const result = await c.env.DB.prepare(`DELETE FROM customers WHERE id = ?`).bind(id).run();
+  if (!result.meta.changes) return c.json({ error: "not found" }, 404);
+  return c.json({ ok: true });
 });
 
 /* ---------- settings ---------- */
