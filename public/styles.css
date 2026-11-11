@@ -1,16 +1,16 @@
 @import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Manrope:wght@500;600;700;800&display=swap");
 
 :root {
-  --ink: #0d2541;
+  --ink: #0b1d34;
   --muted: #59606e;
-  --line: rgba(13, 37, 65, 0.12);
+  --line: rgba(11, 29, 52, 0.12);
   --paper: #f6f4ee;
   --card: #ffffff;
-  --brand: #0d2541;
+  --brand: #0b1d34;
   --brand-deep: #081a30;
   --brand-secondary: #17355c;
   --brand-soft: #f1e8d4;
-  --accent: #be9f65;
+  --accent: #c6a66a;
   --accent-ink: #8f6f33;
   --accent-hover: #d6bc85;
   --warn: #9b3d2e;
@@ -292,21 +292,12 @@ tr:hover td {
 
 .pipeline {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(220px, 260px);
   gap: 0.75rem;
   align-items: start;
-}
-
-@media (max-width: 960px) {
-  .pipeline {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-@media (max-width: 560px) {
-  .pipeline {
-    grid-template-columns: 1fr;
-  }
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
 }
 
 .column {
@@ -315,6 +306,144 @@ tr:hover td {
   border-radius: var(--radius);
   padding: 0.75rem;
   min-height: 180px;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.metric {
+  background: color-mix(in srgb, var(--card) 92%, transparent);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem;
+  box-shadow: var(--shadow);
+}
+
+.metric .label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.metric .value {
+  font-family: var(--display);
+  font-size: 1.55rem;
+  font-weight: 800;
+  margin-top: 0.35rem;
+}
+
+.filters input,
+.filters select {
+  max-width: 220px;
+}
+
+.inline-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.inline-label input {
+  width: auto;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.chip {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.chip:hover {
+  background: var(--brand-soft);
+  border-color: rgba(198, 166, 106, 0.55);
+}
+
+.pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 1rem;
+  margin-top: 0.75rem;
+}
+
+.timeline {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.timeline-item {
+  border-left: 3px solid var(--accent);
+  padding: 0.15rem 0 0.15rem 0.85rem;
+}
+
+.timeline-item .when {
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.followup-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.followup-row:last-child {
+  border-bottom: 0;
+}
+
+button.linkish {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+}
+
+button.linkish:hover {
+  color: var(--accent-ink);
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 26, 48, 0.45);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  z-index: 40;
+}
+
+.modal-card {
+  width: min(420px, 100%);
 }
 
 .column h3 {
