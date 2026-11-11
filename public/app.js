@@ -87,7 +87,6 @@ async function loadAccounts() {
     tr.innerHTML = `
       <td><strong>${escapeHtml(a.name)}</strong></td>
       <td><span class="badge ${a.type}">${a.type}</span></td>
-      <td>${escapeHtml(a.city || "—")}</td>
       <td>${escapeHtml(fmtDate(a.last_contact_at))}</td>`;
     tr.addEventListener("click", () => openAccount(a.id));
     tbody.appendChild(tr);
@@ -100,15 +99,7 @@ async function openAccount(id) {
   setView("detail");
   const a = data.account;
   $("#detail-name").textContent = a.name;
-  $("#detail-meta").textContent = [
-    a.type,
-    a.property_type,
-    a.address,
-    a.city,
-    a.sq_ft ? `${a.sq_ft} sq ft` : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  $("#detail-meta").textContent = a.type;
   $("#detail-notes").textContent = a.notes || "";
   $("#detail-last-contact").textContent = fmtDate(a.last_contact_at);
 
@@ -131,9 +122,11 @@ async function openAccount(id) {
   const dbody = $("#deals-table tbody");
   dbody.innerHTML = "";
   for (const d of data.deals) {
+    const site = [d.address, d.city].filter(Boolean).join(", ") || "—";
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${escapeHtml(d.stage)}</td>
+      <td>${escapeHtml(site)}</td>
       <td>${escapeHtml(d.cleaning_type || "—")}</td>
       <td>${escapeHtml(d.frequency || "—")}</td>
       <td>${escapeHtml(fmtMoney(d.value_cents))}</td>
@@ -162,10 +155,6 @@ function fillAccountForm(a) {
   form.id.value = a.id;
   form.name.value = a.name || "";
   form.type.value = a.type || "residential";
-  form.property_type.value = a.property_type || "";
-  form.address.value = a.address || "";
-  form.city.value = a.city || "";
-  form.sq_ft.value = a.sq_ft ?? "";
   form.notes.value = a.notes || "";
   $("#account-form-title").textContent = "Edit account";
 }
@@ -210,9 +199,10 @@ async function loadPipeline() {
       });
       card.addEventListener("dragend", () => card.classList.remove("dragging"));
       const other = STAGES.filter((s) => s.id !== d.stage);
+      const site = [d.address, d.city].filter(Boolean).join(", ");
       card.innerHTML = `
         <strong>${escapeHtml(d.account_name)}</strong>
-        <div class="meta">${escapeHtml(d.cleaning_type || "Cleaning")} · ${escapeHtml(fmtMoney(d.value_cents))}</div>
+        <div class="meta">${escapeHtml(site || d.cleaning_type || "Cleaning")} · ${escapeHtml(fmtMoney(d.value_cents))}</div>
         <div class="actions">
           ${other.map((s) => `<button type="button" data-move="${d.id}" data-stage="${s.id}">→ ${s.label}</button>`).join("")}
         </div>`;
@@ -258,10 +248,6 @@ function wire() {
     const payload = {
       name: form.name.value,
       type: form.type.value,
-      property_type: form.property_type.value || null,
-      address: form.address.value || null,
-      city: form.city.value || null,
-      sq_ft: form.sq_ft.value ? Number(form.sq_ft.value) : null,
       notes: form.notes.value || null,
     };
     const id = form.id.value;
@@ -377,6 +363,10 @@ function wire() {
         frequency: form.frequency.value || null,
         value_cents: dollars == null ? null : Math.round(dollars * 100),
         preferred_at: form.preferred_at.value || null,
+        address: form.address.value || null,
+        city: form.city.value || null,
+        property_type: form.property_type.value || null,
+        sq_ft: form.sq_ft.value ? Number(form.sq_ft.value) : null,
         notes: form.notes.value || null,
       }),
     });

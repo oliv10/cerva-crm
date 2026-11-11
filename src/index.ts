@@ -114,28 +114,14 @@ app.post("/api/accounts", async (c) => {
   const body = await c.req.json<{
     name?: string;
     type?: string;
-    property_type?: string;
-    address?: string;
-    city?: string;
-    sq_ft?: number | null;
     notes?: string;
   }>();
   if (!body.name?.trim()) return c.json({ error: "name required" }, 400);
   const type = body.type === "commercial" ? "commercial" : "residential";
   const result = await c.env.DB.prepare(
-    `INSERT INTO accounts (name, type, property_type, address, city, sq_ft, notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?)
-     RETURNING id`,
+    `INSERT INTO accounts (name, type, notes) VALUES (?, ?, ?) RETURNING id`,
   )
-    .bind(
-      body.name.trim(),
-      type,
-      body.property_type ?? null,
-      body.address ?? null,
-      body.city ?? null,
-      body.sq_ft ?? null,
-      body.notes ?? null,
-    )
+    .bind(body.name.trim(), type, body.notes ?? null)
     .first<{ id: number }>();
   return c.json({ id: result!.id }, 201);
 });
@@ -145,28 +131,14 @@ app.put("/api/accounts/:id", async (c) => {
   const body = await c.req.json<{
     name?: string;
     type?: string;
-    property_type?: string;
-    address?: string;
-    city?: string;
-    sq_ft?: number | null;
     notes?: string;
   }>();
   if (!body.name?.trim()) return c.json({ error: "name required" }, 400);
   const type = body.type === "commercial" ? "commercial" : "residential";
   const result = await c.env.DB.prepare(
-    `UPDATE accounts SET name=?, type=?, property_type=?, address=?, city=?, sq_ft=?, notes=?
-     WHERE id=?`,
+    `UPDATE accounts SET name=?, type=?, notes=? WHERE id=?`,
   )
-    .bind(
-      body.name.trim(),
-      type,
-      body.property_type ?? null,
-      body.address ?? null,
-      body.city ?? null,
-      body.sq_ft ?? null,
-      body.notes ?? null,
-      id,
-    )
+    .bind(body.name.trim(), type, body.notes ?? null, id)
     .run();
   if (!result.meta.changes) return c.json({ error: "not found" }, 404);
   return c.json({ ok: true });
@@ -272,13 +244,17 @@ app.post("/api/deals", async (c) => {
     frequency?: string;
     value_cents?: number | null;
     preferred_at?: string;
+    address?: string;
+    city?: string;
+    property_type?: string;
+    sq_ft?: number | null;
     notes?: string;
   }>();
   if (!body.account_id) return c.json({ error: "account_id required" }, 400);
   const stage = (body.stage && STAGES.has(body.stage as DealStage) ? body.stage : "lead") as string;
   const result = await c.env.DB.prepare(
-    `INSERT INTO deals (account_id, stage, cleaning_type, frequency, value_cents, preferred_at, notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO deals (account_id, stage, cleaning_type, frequency, value_cents, preferred_at, address, city, property_type, sq_ft, notes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      RETURNING id`,
   )
     .bind(
@@ -288,6 +264,10 @@ app.post("/api/deals", async (c) => {
       body.frequency ?? null,
       body.value_cents ?? null,
       body.preferred_at ?? null,
+      body.address ?? null,
+      body.city ?? null,
+      body.property_type ?? null,
+      body.sq_ft ?? null,
       body.notes ?? null,
     )
     .first<{ id: number }>();
@@ -302,30 +282,45 @@ app.put("/api/deals/:id", async (c) => {
     frequency?: string;
     value_cents?: number | null;
     preferred_at?: string;
+    address?: string;
+    city?: string;
+    property_type?: string;
+    sq_ft?: number | null;
     notes?: string;
   }>();
 
-  const existing = await c.env.DB.prepare(`SELECT * FROM deals WHERE id = ?`).bind(id).first();
+  const existing = await c.env.DB.prepare(`SELECT * FROM deals WHERE id = ?`).bind(id).first<{
+    stage: string;
+    cleaning_type: string | null;
+    frequency: string | null;
+    value_cents: number | null;
+    preferred_at: string | null;
+    address: string | null;
+    city: string | null;
+    property_type: string | null;
+    sq_ft: number | null;
+    notes: string | null;
+  }>();
   if (!existing) return c.json({ error: "not found" }, 404);
 
   const stage =
-    body.stage && STAGES.has(body.stage as DealStage)
-      ? body.stage
-      : (existing as { stage: string }).stage;
+    body.stage && STAGES.has(body.stage as DealStage) ? body.stage : existing.stage;
 
   await c.env.DB.prepare(
-    `UPDATE deals SET stage=?, cleaning_type=?, frequency=?, value_cents=?, preferred_at=?, notes=?
+    `UPDATE deals SET stage=?, cleaning_type=?, frequency=?, value_cents=?, preferred_at=?, address=?, city=?, property_type=?, sq_ft=?, notes=?
      WHERE id=?`,
   )
     .bind(
       stage,
-      body.cleaning_type ?? (existing as { cleaning_type: string | null }).cleaning_type,
-      body.frequency ?? (existing as { frequency: string | null }).frequency,
-      body.value_cents !== undefined
-        ? body.value_cents
-        : (existing as { value_cents: number | null }).value_cents,
-      body.preferred_at ?? (existing as { preferred_at: string | null }).preferred_at,
-      body.notes ?? (existing as { notes: string | null }).notes,
+      body.cleaning_type ?? existing.cleaning_type,
+      body.frequency ?? existing.frequency,
+      body.value_cents !== undefined ? body.value_cents : existing.value_cents,
+      body.preferred_at ?? existing.preferred_at,
+      body.address !== undefined ? body.address : existing.address,
+      body.city !== undefined ? body.city : existing.city,
+      body.property_type !== undefined ? body.property_type : existing.property_type,
+      body.sq_ft !== undefined ? body.sq_ft : existing.sq_ft,
+      body.notes ?? existing.notes,
       id,
     )
     .run();

@@ -49,10 +49,6 @@
                   <option value="commercial">Commercial</option>
                 </select>
               </label>
-              <label>Property type <input name="property_type" placeholder="Office, house, clinic…" /></label>
-              <label>City <input name="city" /></label>
-              <label>Address <input name="address" /></label>
-              <label>Sq ft <input name="sq_ft" type="number" min="0" /></label>
             </div>
             <label>Notes <textarea name="notes"></textarea></label>
             <div class="form-actions">
@@ -69,7 +65,6 @@
               <tr>
                 <th>Name</th>
                 <th>Type</th>
-                <th>City</th>
                 <th>Last contact</th>
               </tr>
             </thead>
@@ -152,6 +147,10 @@
               <label>Frequency <input name="frequency" placeholder="Weekly, biweekly…" /></label>
               <label>Value ($) <input name="value_dollars" type="number" min="0" step="0.01" /></label>
               <label>Preferred date <input name="preferred_at" type="date" /></label>
+              <label>Address <input name="address" placeholder="Site address" /></label>
+              <label>City <input name="city" /></label>
+              <label>Property type <input name="property_type" placeholder="Office, house, clinic…" /></label>
+              <label>Sq ft <input name="sq_ft" type="number" min="0" /></label>
             </div>
             <label>Notes <textarea name="notes"></textarea></label>
             <div class="form-actions">
@@ -163,6 +162,7 @@
             <thead>
               <tr>
                 <th>Stage</th>
+                <th>Site</th>
                 <th>Type</th>
                 <th>Frequency</th>
                 <th>Value</th>
