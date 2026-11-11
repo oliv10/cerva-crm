@@ -295,11 +295,16 @@ function renderTimeline(el, activities, showOpp) {
     .map(
       (a) => `
       <article class="timeline-item">
-        <div class="when">${escapeHtml(fmtDate(a.happened_at))} · ${escapeHtml(a.type || "note")}</div>
-        <div class="summary"><strong>${escapeHtml(a.summary)}</strong>
-          ${showOpp && a.account_name ? ` <span class="muted">· ${escapeHtml(a.account_name)}</span>` : ""}
+        <div class="row" style="align-items:flex-start">
+          <div style="flex:1">
+            <div class="when">${escapeHtml(fmtDate(a.happened_at))} · ${escapeHtml(a.type || "note")}</div>
+            <div class="summary"><strong>${escapeHtml(a.summary)}</strong>
+              ${showOpp && a.account_name ? ` <span class="muted">· ${escapeHtml(a.account_name)}</span>` : ""}
+            </div>
+            <div class="muted">${[a.person, a.outcome, a.next_action].filter(Boolean).map(escapeHtml).join(" · ") || ""}</div>
+          </div>
+          <button type="button" data-del-activity="${a.id}">Delete</button>
         </div>
-        <div class="muted">${[a.person, a.outcome, a.next_action].filter(Boolean).map(escapeHtml).join(" · ") || ""}</div>
       </article>`,
     )
     .join("");
@@ -368,7 +373,8 @@ async function loadContacts() {
       <td>${escapeHtml(c.account_name)}</td>
       <td>${escapeHtml(c.email || "—")}</td>
       <td>${escapeHtml(c.phone || "—")}</td>
-      <td title="${escapeHtml(c.last_subject || "")}">${escapeHtml(fmtDate(c.last_contact_at))}</td>`;
+      <td title="${escapeHtml(c.last_subject || "")}">${escapeHtml(fmtDate(c.last_contact_at))}</td>
+      <td><button type="button" data-del-contact="${c.id}">Delete</button></td>`;
     tbody.appendChild(tr);
   }
 }
@@ -490,7 +496,8 @@ async function loadCustomers() {
       <td>${escapeHtml(site)}</td>
       <td>${escapeHtml(c.frequency || "—")}</td>
       <td>${escapeHtml(fmtMoney(c.mrr_cents))}</td>
-      <td>${escapeHtml(fmtDay(c.start_date))}</td>`;
+      <td>${escapeHtml(fmtDay(c.start_date))}</td>
+      <td><button type="button" data-del-customer="${c.id}">Delete</button></td>`;
     tbody.appendChild(tr);
   }
 }
@@ -617,9 +624,17 @@ function wire() {
 
   $("#delete-opp-btn").addEventListener("click", async () => {
     if (!state.detail) return;
-    if (!confirm(`Delete ${state.detail.opportunity.account_name}?`)) return;
+    if (!confirm("Delete this opportunity?")) return;
     await api(`/api/opportunities/${state.detail.opportunity.id}`, { method: "DELETE" });
     showFlash("Opportunity deleted");
+    await loadView("opportunities");
+  });
+
+  $("#delete-account-btn").addEventListener("click", async () => {
+    if (!state.detail) return;
+    if (!confirm("Delete this account?")) return;
+    await api(`/api/accounts/${state.detail.opportunity.account_id}`, { method: "DELETE" });
+    showFlash("Account deleted");
     await loadView("opportunities");
   });
 
@@ -762,10 +777,40 @@ function wire() {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => loadContacts(), 200);
   });
+  $("#contacts-list-table").addEventListener("click", async (e) => {
+    const delId = e.target.dataset?.delContact;
+    if (!delId) return;
+    if (!confirm("Delete this contact?")) return;
+    await api(`/api/contacts/${delId}`, { method: "DELETE" });
+    showFlash("Contact deleted");
+    await loadContacts();
+  });
   $("#activity-opp-filter").addEventListener("change", () => loadActivities());
+  const onDelActivity = async (e) => {
+    const delId = e.target.dataset?.delActivity;
+    if (!delId) return;
+    if (!confirm("Delete this activity?")) return;
+    await api(`/api/activities/${delId}`, { method: "DELETE" });
+    showFlash("Activity deleted");
+    if (state.view === "detail" && state.detail?.opportunity?.id) {
+      await openOpportunity(state.detail.opportunity.id);
+    } else {
+      await loadActivities();
+    }
+  };
+  $("#activity-timeline").addEventListener("click", onDelActivity);
+  $("#activities-list").addEventListener("click", onDelActivity);
   $("#customer-search").addEventListener("input", () => {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => loadCustomers(), 200);
+  });
+  $("#customers-table").addEventListener("click", async (e) => {
+    const delId = e.target.dataset?.delCustomer;
+    if (!delId) return;
+    if (!confirm("Delete this customer?")) return;
+    await api(`/api/customers/${delId}`, { method: "DELETE" });
+    showFlash("Customer deleted");
+    await loadCustomers();
   });
 
   $("#followup-buckets").addEventListener("click", async (e) => {
